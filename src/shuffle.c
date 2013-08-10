@@ -9,8 +9,18 @@
 typedef char* Poker;
 
 Poker draw(FILE *draw_deck){
-  Poker pk = malloc(1024);
-  return (fgets(pk, 1024, draw_deck) != NULL) ? pk : NULL;
+  char* buf = NULL;
+  int buf_len = 0;
+  int bytes_read;
+
+  bytes_read = getline(&buf, &buf_len, draw_deck);
+  if(bytes_read == -1)
+    return NULL;
+  else{
+    char *poker = malloc(bytes_read + 1);
+    strcpy(poker, buf);
+    return poker;
+  }
 }
 
 void show_deck(Poker deck[]){
