@@ -9,3 +9,5 @@ done:
 
 todo : 
 2. support for reading input from stdin or file
+
+test by wangxx
