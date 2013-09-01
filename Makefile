@@ -1,7 +1,8 @@
 all :
 	make -C src
-	mkdir -p output
-	mv src/shuffle output/
+	mkdir -p output/bin/
+	cp src/shuffle output/bin/
 
 clean :
-	rm -rf output/*
+	make -C src clean
+	rm -rf output/
