@@ -2,50 +2,23 @@
 #include <time.h>
 #include <stdlib.h>
 #include <unistd.h>
-
-
-#define MAX_SHUFFLE_DECK_SIZE 1024 * 500
-typedef char* Poker;
-
-
-Poker draw(FILE *draw_deck){
-    char* buf = NULL;
-    int buf_len = 0;
-    int bytes_read;
-
-    bytes_read = getline(&buf, &buf_len, draw_deck);
-    if(bytes_read == -1)
-	return NULL;
-    else{
-	char *poker = malloc(bytes_read + 1);
-	strcpy(poker, buf);
-	return poker;
-    }
-}
-
-void show_deck(Poker deck[]){
-    int i;
-    for (i=0; deck[i] != NULL; i++){
-	printf("%d", atoi(deck[i]));
-	printf("%c", (deck[i + 1] != NULL) ? ' ' : '\n');
-    }
-}
+#include <string.h>
 
 
 struct {
     FILE *draw_deck;
-    Poker *shuffle_deck;
 } global_args;
+
 
 void usage(){
     printf("Usage: shuffle [-f file]\n");
     exit(-1);
 }
 
+
 void parse_arg(int argc, char *argv[]){
     /* set default value for global argument */
     global_args.draw_deck = stdin;
-    global_args.shuffle_deck = malloc(sizeof(Poker) * MAX_SHUFFLE_DECK_SIZE);
 
     /* read argument */
     int ch;
@@ -66,29 +39,63 @@ void parse_arg(int argc, char *argv[]){
 	    break;
 	}
     }
-
     return;
 }
 
 
+typedef char* Poker;
+#define MAX_SHUFFLE_DECK_SIZE 1024 * 500
+
+Poker draw(FILE *draw_deck){
+    char* buf = NULL;
+    size_t buf_len = 0;
+    int bytes_read;
+
+    bytes_read = getline(&buf, &buf_len, draw_deck);
+    if(bytes_read == -1)
+	return NULL;
+    else{
+	Poker poker = malloc(bytes_read);
+	strcpy(poker, buf);
+	return poker;
+    }
+}
 
 
-int main (int argc, char *argv[] ){
-    parse_arg(argc, argv);
-
+Poker* shuffle(FILE *draw_deck){
     srand( (unsigned int)time(NULL) );
+    Poker *shuffle_deck = malloc(sizeof(Poker) * MAX_SHUFFLE_DECK_SIZE);
+
     int pokercnt=0;
     Poker crrnt_poker;
-    while ( (crrnt_poker = draw(global_args.draw_deck)) != NULL){
+    while ( (crrnt_poker = draw(draw_deck)) != NULL){
     	pokercnt++;
 
     	int insert_position = rand() % pokercnt;
     	if (insert_position != pokercnt -1)
-    	    global_args.shuffle_deck[pokercnt - 1] = global_args.shuffle_deck[insert_position];
-    	global_args.shuffle_deck[insert_position] = crrnt_poker;
+    	    shuffle_deck[pokercnt - 1] = shuffle_deck[insert_position];
+    	shuffle_deck[insert_position] = crrnt_poker;
     }
+    return shuffle_deck;
+}
 
-    show_deck(global_args.shuffle_deck);
+
+void show_deck(Poker deck[]){
+    int i;
+    for (i=0; deck[i] != NULL; i++){
+	printf("%d", atoi(deck[i]));
+	printf("%c", (deck[i + 1] != NULL) ? ' ' : '\n');
+    }
+}
+
+
+int main (int argc, char *argv[] ){
+    parse_arg(argc, argv);
+    
+    Poker *shuffle_deck;
+    shuffle_deck = shuffle(global_args.draw_deck);
+
+    show_deck(shuffle_deck);
 
     return 0;
 }
